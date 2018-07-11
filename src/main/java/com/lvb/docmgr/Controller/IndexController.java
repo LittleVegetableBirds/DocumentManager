@@ -1,5 +1,6 @@
 package com.lvb.docmgr.Controller;
 
+import com.lvb.docmgr.Model.User;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 
