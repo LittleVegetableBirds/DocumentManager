@@ -8,7 +8,7 @@ import java.util.List;
 @Mapper
 public interface UserDao {
     @Select("Select * From user")
-    List<User getAllUsers();
+    List<User> getAllUsers();
 
     @Select("Select * From user Where status=0")
     List<User> getUnVerifyUsers();
@@ -19,7 +19,7 @@ public interface UserDao {
     @Select("Select * From user Where username=#{username}")
     User getUserByUsername(@Param("username") String username);
 
-    @Insert("INSERT INTO user(username,password,role,name,sex,birthday,address,contact,referrer,industryid,committeeid) VALUES (#{username},#{password},#{role},#{name},#{sex},#{birthday},#{address},#{contact},#{referrer},#{industryid},#{committeeid},#{seminarid})")
+    @Insert("INSERT INTO user(username,password,role,name,sex,birthday,address,contact,referrer,industryid,committeeid,seminarid) VALUES (#{username},#{password},#{role},#{name},#{sex},#{birthday},#{address},#{contact},#{referrer},#{industryid},#{committeeid},#{seminarid})")
     @Options(useGeneratedKeys = true, keyProperty = "uid")
     int insert(User user);
 

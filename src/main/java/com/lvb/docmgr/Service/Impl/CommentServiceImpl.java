@@ -3,13 +3,14 @@ package com.lvb.docmgr.Service.Impl;
 import com.lvb.docmgr.Dao.CommentDao;
 import com.lvb.docmgr.Dao.ProposalDao;
 import com.lvb.docmgr.Model.Comment;
+import com.lvb.docmgr.Service.CommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public class CommentServiceImpl {
+public class CommentServiceImpl implements CommentService {
     @Autowired
     CommentDao commentDao;
 

@@ -15,7 +15,7 @@
     <script src="https://cdn.bootcss.com/bootstrap/4.0.0/js/bootstrap.min.js"
             integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
             crossorigin="anonymous"></script>
-    <title>管理员</title>
+    <title>提案列表</title>
 </head>
 <body>
 <div class="container">
@@ -23,14 +23,30 @@
         <div class="col-12">
             <div th:replace="~{component :: page_title}"></div>
             <div class="row">
-                <div th:replace="~{component :: admin_nav}"></div>
+                <div th:replace="~{component :: writer_nav}"></div>
                 <div class="col-9">
                     <div class="card mt-4">
                         <div class="card-header">
-                            管理员
+                            用户信息
                         </div>
                         <div class="card-body">
-                            管理员页面
+                            <form action="/user/recommend" method="post">
+                                <div th:if="${err_msg!=null}" id="myAlert" class="alert alert-danger">
+                                    <a href="#" class="close" data-dismiss="alert">&times;</a>
+                                    <strong>提示信息:</strong><a th:text="${err_msg}"></a>
+                                </div>
+                                <div class="form-group">
+                                    <label for="uid">用户</label>
+                                    <select name="uid" id="uid" class="form-control" required>
+                                        <option th:each="user:${users}" th:value="${user.uid}" th:text="${user.username}"></option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="reason">推荐原因</label>
+                                    <textarea rows="5" class="form-control" id="reason" name="reason" placeholder="推荐原因" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">提交</button>
+                            </form>
                         </div>
                     </div>
                 </div>

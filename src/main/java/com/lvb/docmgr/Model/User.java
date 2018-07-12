@@ -8,8 +8,8 @@ public class User {
     private String username;
     private String password;
 
-    private int role;
-    private int status;
+    private int role; //1 最大 2专委会 3 行业分会 4研究会
+    private int status;//审核通过 0 未通过1
     private String name;
     private String sex;
     private String birthday;

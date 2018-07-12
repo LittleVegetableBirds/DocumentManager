@@ -1,5 +1,6 @@
 package com.lvb.docmgr.Controller;
 
+import com.lvb.docmgr.Model.Comment;
 import com.lvb.docmgr.Model.Proposal;
 import com.lvb.docmgr.Model.User;
 import com.lvb.docmgr.Service.CommentService;
@@ -36,6 +37,95 @@ public class ProposalController {
         }
     }
 
+    @RequestMapping("/proposal/collect")
+    public String collect(HttpSession session,
+                          ModelMap modelMap)  {
+        User user = (User) session.getAttribute("user");
+        if (user != null) {
+            List<Proposal> proposals = proposalService.getProposalsByUid(user.getUid());
+            modelMap.addAttribute("user", user);
+            modelMap.addAttribute("proposals", proposals);
+            return "proposal_list";
+        } else {
+            return "redirect:/user/login?referrer=/proposal/collect";
+        }
+    }
+
+    @RequestMapping("/proposal/recommend")
+    public String recommend(HttpSession session,
+                            ModelMap modelMap) {
+        User user = (User) session.getAttribute("user");
+        if (user != null) {
+            List<Proposal> proposals = proposalService.getRecommendProposals();
+            modelMap.addAttribute("user", user);
+            modelMap.addAttribute("proposals", proposals);
+            return "proposal_list";
+        } else {
+            return "redirect:/user/login?referrer=/proposal/recommend";
+        }
+    }
+
+    @RequestMapping("/proposal/recommend/{pid}")
+    public String newProposal(HttpSession session, ModelMap modelMap,
+                              @PathVariable("pid") int pid) {
+        User user = (User) session.getAttribute("user");
+        if (user != null) {
+            if (user.getRole() == 1 || user.getRole() == 2) { //用户ROLE=2
+                proposalService.updateStatus(pid, 1);
+            }
+            modelMap.addAttribute("user", user);
+            return "redirect:/proposal/view/" + pid;
+        } else {
+            return "redirect:/user/login?referrer=/proposal/recommend/" + pid;
+        }
+    }
+
+    @RequestMapping("/proposal/recommend/{pid}")
+    public String recommend(HttpSession session,
+                            ModelMap modelMap,
+                            @PathVariable("pid") int pid) {
+        User user = (User) session.getAttribute("user");
+        if (user != null) {
+            if (user.getRole() == 1 || user.getRole() == 2) {
+                proposalService.updateStatus(pid, 1);
+            }
+            modelMap.addAttribute("user", user);
+            return "redirect:/proposal/view/" + pid;
+        } else {
+            return "redirect:/user/login?referrer=/proposal/recommend/" + pid;
+        }
+    }
+
+    @RequestMapping("/proposal/register")
+    public String register(HttpSession session,
+                           ModelMap modelMap) {
+        User user = (User) session.getAttribute("user");
+        if (user != null) {
+            List<Proposal> proposals = proposalService.getRegisterProposals();
+            modelMap.addAttribute("user", user);
+            modelMap.addAttribute("proposals", proposals);
+            return "proposal_list";
+        } else {
+            return "redirect:/user/login?referrer=/proposal/register";
+        }
+    }
+
+    @RequestMapping("/proposal/register/{pid}")
+    public String register(HttpSession session,
+                           ModelMap modelMap,
+                           @PathVariable("pid") int pid) {
+        User user = (User) session.getAttribute("user");
+        if (user != null) {
+            if (user.getRole() == 1 || user.getRole() == 4) {
+                proposalService.updateStatus(pid, 3);
+            }
+            modelMap.addAttribute("user", user);
+            return "redirect:/proposal/view/" + pid;
+        } else {
+            return "redirect:/user/login?referrer=/proposal/register/" + pid;
+        }
+    }
+
     @RequestMapping(path = "/proposal/my")
     public String myProposal(HttpSession session,
                              ModelMap modelMap) {
@@ -46,22 +136,25 @@ public class ProposalController {
             modelMap.addAttribute("proposals", proposals);
             return "proposal_list";
         } else {
-            return "redirect:/user/login";
+            return "redirect:/user/login?referrer=/proposal/my";
         }
     }
 
     @RequestMapping(path = "/proposal/search")
     public String search(HttpSession session,
                          ModelMap modelMap,
-                         @RequestParam("name") String name) {
+                         @RequestParam(value = "name", required = false) String name) {
         User user = (User) session.getAttribute("user");
         if (user != null) {
+            if (name == null) {
+                name = "";
+            }
             List<Proposal> proposals = proposalService.getProposalsByName(name);
             modelMap.addAttribute("user", user);
             modelMap.addAttribute("proposals", proposals);
             return "proposal_list";
         } else {
-            return "redirect:/user/login";
+            return "redirect:/user/login?referrer=/proposal/search";
         }
     }
 
@@ -73,7 +166,7 @@ public class ProposalController {
             modelMap.addAttribute("user", user);
             return "proposal_new";
         } else {
-            return "redirect:/user/login";
+            return "redirect:/user/login?referrer=/proposal/new";
         }
     }
 
@@ -87,13 +180,61 @@ public class ProposalController {
             int pid = proposalService.add(user.getUid(), name, content);
             if (pid > 0) {
                 return "redirect:/proposal/view/" + pid;
+            } else if (pid == -2) {
+                modelMap.addAttribute("user", user);
+                modelMap.addAttribute("err_msg", "不能发布超过三篇未推荐提案");
+                return "proposal_new";
             } else {
                 modelMap.addAttribute("user", user);
                 modelMap.addAttribute("err_msg", "发布失败");
                 return "proposal_new";
             }
         } else {
-            return "redirect:/user/login";
+            return "redirect:/user/login?referrer=/proposal/new";
+        }
+    }
+
+    @RequestMapping(path = "/proposal/save/{pid}", method = RequestMethod.GET)
+    public String updateProposal(HttpSession session,
+                                 ModelMap modelMap,
+                                 @PathVariable("pid") int pid) {
+        User user = (User) session.getAttribute("user");
+        if (user != null) {
+            Proposal proposal = proposalService.getProposalByPid(pid);
+            if (proposal.getAuthor() == user.getUid() || user.getRole() == 1) {
+                modelMap.addAttribute("user", user);
+                modelMap.addAttribute("proposal", proposal);
+                return "proposal_new";
+            } else {
+                return "redirect:/proposal/view/" + pid;
+            }
+        } else {
+            return "redirect:/user/login?referrer=/proposal/save/" + pid;
+        }
+    }
+
+    @RequestMapping(path = "/proposal/save", method = RequestMethod.POST)
+    public String updateProposal(HttpSession session,
+                                 ModelMap modelMap,
+                                 @RequestParam("pid") int pid,
+                                 @RequestParam("content") String content) {
+        User user = (User) session.getAttribute("user");
+        if (user != null) {
+            Proposal proposal = proposalService.getProposalByPid(pid);
+            if (proposal.getAuthor() == user.getUid() || user.getRole() == 1) {
+                int r = proposalService.update(pid, content);
+                if (r > 0) {
+                    return "redirect:/proposal/view/" + pid;
+                } else {
+                    modelMap.addAttribute("user", user);
+                    modelMap.addAttribute("err_msg", "修改失败");
+                    return "proposal_new";
+                }
+            } else {
+                return "redirect:/proposal/view/" + pid;
+            }
+        } else {
+            return "redirect:/user/login?referrer=/proposal/save/" + pid;
         }
     }
 
@@ -109,7 +250,7 @@ public class ProposalController {
             modelMap.addAttribute("comments", comments);
             return "proposal_view";
         } else {
-            return "redirect:/user/login";
+            return "redirect:/user/login?referrer=/proposal/view/" + pid;
         }
     }
 

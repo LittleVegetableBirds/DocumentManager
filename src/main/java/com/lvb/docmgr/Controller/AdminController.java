@@ -1,12 +1,15 @@
 package com.lvb.docmgr.Controller;
 
+import com.lvb.docmgr.Model.Recommendation;
 import com.lvb.docmgr.Model.User;
+import com.lvb.docmgr.Model.UserInfo;
 import com.lvb.docmgr.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpSession;
 import java.util.List;
@@ -30,7 +33,7 @@ public class AdminController {
                 return "admin_error";
             }
         } else {
-            return "redirect:/user/login";
+            return "redirect:/user/login?referrer=/admin/index";
         }
     }
 
@@ -39,7 +42,7 @@ public class AdminController {
                   ModelMap modelMap) {
         User user = (User) session.getAttribute("user");
         if (user != null) {
-            if (user.getRole() == 1) {
+            if (user.getRole() == 1) {//数据库中管理员ROLE=1
                 List<User> users = userService.getAllUsers();
                 modelMap.addAttribute("user", user);
                 modelMap.addAttribute("users", users);
@@ -50,7 +53,7 @@ public class AdminController {
                 return "admin_error";
             }
         } else {
-            return "redirect:/user/login";
+            return "redirect:/user/login?referrer=/user/manage";
         }
     }
 
@@ -70,7 +73,7 @@ public class AdminController {
                 return "admin_error";
             }
         } else {
-            return "redirect:/user/login";
+            return "redirect:/user/login?referrer=/user/verify";
         }
     }
 
@@ -84,16 +87,40 @@ public class AdminController {
                 User checkUser = userService.getUserByUid(uid);
                 modelMap.addAttribute("user", user);
                 modelMap.addAttribute("checkuser", checkUser);//调用add
+                Recommendation recommendation = userService.getRecommendationByUid(checkUser.getUid());
+                if (recommendation != null) {
+                    String reason = recommendation.getReason();
+                    int rid = recommendation.getRid();
+                    User recommendUser = userService.getUserByUid(rid);
+                    UserInfo recommendUserInfo = userService.getUserInfoByUid(rid);
+                    modelMap.addAttribute("recommenduser", recommendUser);
+                    modelMap.addAttribute("recommenduserinfo", recommendUserInfo);
+                    modelMap.addAttribute("reason", reason);
+                }
                 return "user_verify_view";
-            }
-            else {
+            } else {
                 modelMap.addAttribute("user", user);
-                modelMap.addAttribute("err_msg","您不是管理员");
+                modelMap.addAttribute("err_msg", "您不是管理员");
                 return "admin_error";
             }
         } else {
-            return "redirect:/user/login";
+            return "redirect:/user/login?referrer=/user/view/" + uid;
         }
     }
 
-}
+    @RequestMapping("/user/verify/{uid}")
+    String verifyUser(HttpSession session,
+                      ModelMap modelMap,
+                      @PathVariable("uid") int uid,
+                      @RequestParam("status") int status) {
+        if (status == 1) {
+            userService.changeStatus(uid,1);
+            return "redirect:/user/verify";
+        } else if (status == 2) {
+            userService.changeStatus(uid,2);
+            return "redirect:/user/verify";
+        }else{
+            return "redirect:/user/verify";
+        }
+        }
+    }

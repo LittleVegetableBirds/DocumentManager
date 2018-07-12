@@ -13,4 +13,6 @@ create table seminar(
     `name` text not null,
     primary key(`seminarid`)
 );
+
+
  */

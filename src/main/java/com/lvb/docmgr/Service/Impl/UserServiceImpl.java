@@ -1,7 +1,7 @@
 package com.lvb.docmgr.Service.Impl;
 
-import com.lvb.docmgr.Dao.UserDao;
-import com.lvb.docmgr.Model.User;
+import com.lvb.docmgr.Dao.*;
+import com.lvb.docmgr.Model.*;
 import com.lvb.docmgr.Result.MultiResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -10,9 +10,25 @@ import com.lvb.docmgr.Service.UserService;
 import java.util.List;
 
 @Service
-public class UserServiceImpl {
+public class UserServiceImpl implements UserService {
     @Autowired
     UserDao userDao;
+
+    @Autowired
+    UserInfoDao userInfoDao;
+
+    @Autowired
+    RecommendationDao recommendationDao;
+
+
+    @Autowired
+    CommitteeDao committeeDao;
+
+    @Autowired
+    IndustryDao industryDao;
+
+    @Autowired
+    SeminarDao seminarDao;
 
     @Override
     public MultiResult<User> login(String username, String password) {
@@ -53,13 +69,66 @@ public class UserServiceImpl {
     }
 
     @Override
+    public int recommend(int uid, int rid, String reason) {
+        Recommendation recommendation = recommendationDao.getRecommendationByUidAndRid(uid, rid);
+        if (recommendation != null) {
+            return -1;
+        } else {
+            recommendation = new Recommendation(uid, rid, reason);
+            int r = recommendationDao.insert(recommendation);
+            if (r < 0)
+                return 0;
+            else
+                return recommendation.getId();
+        }
+    }
+
+    @Override
+    public Recommendation getRecommendationById(int id) {
+        return recommendationDao.getRecommendationById(id);
+    }
+
+    @Override
+    public Recommendation getRecommendationByUid(int uid) {
+        return recommendationDao.getRecommendationByUid(uid);
+    }
+
+    @Override
+    public List<Recommendation> getRecommendations() {
+        return recommendationDao.getRecommendations();
+    }
+
+    @Override
     public void changeStatus(int uid, int status) {
         userDao.changeStatus(uid, status);
+        recommendationDao.updateStatus(uid,status);
     }
 
     @Override
     public User getUserByUid(int uid) {
         return userDao.getUserByUid(uid);
+    }
+
+    @Override
+    public User getUserByUsername(String username) {
+        return userDao.getUserByUsername(username);
+    }
+
+    @Override
+    public UserInfo getUserInfoByUid(int uid) {
+        return userInfoDao.getUserInfoByUid(uid);
+    }
+
+    @Override
+    public void createOrSaveUserInfo(UserInfo userInfo) {
+        if (userInfo != null) {
+            UserInfo u = userInfoDao.getUserInfoByUid(userInfo.getUid());
+            if (u != null) {
+                userInfoDao.update(userInfo);
+            } else {
+                userInfoDao.insert(userInfo);
+            }
+        }
     }
 
     @Override
@@ -70,5 +139,20 @@ public class UserServiceImpl {
     @Override
     public List<User> getUnVerifyUsers() {
         return userDao.getUnVerifyUsers();
+    }
+
+    @Override
+    public List<Committee> getCommittees() {
+        return committeeDao.getAll();
+    }
+
+    @Override
+    public List<Industry> getIndustries() {
+        return industryDao.getAll();
+    }
+
+    @Override
+    public List<Seminar> getSeminars() {
+        return seminarDao.getAll();
     }
 }
